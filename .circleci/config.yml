@@ -1,0 +1,61 @@
+--- 
+executors: 
+  docker-publisher: 
+    docker: 
+      - 
+        image: "circleci/buildpack-deps:stretch"
+    environment: 
+      IMAGE_NAME: johnsout/challenge
+jobs: 
+  build: 
+    executor: docker-publisher
+    steps: 
+      - checkout
+      - setup_remote_docker
+      - 
+        run: 
+          command: "docker build -t $IMAGE_NAME:latest docker/"
+          name: "Build Docker image"
+      - 
+        run: 
+          command: "docker save -o image.tar $IMAGE_NAME"
+          name: "Archive Docker image"
+      - 
+        persist_to_workspace: 
+          paths: 
+            - ./image.tar
+          root: "."
+  publish-latest: 
+    executor: docker-publisher
+    steps: 
+      - 
+        attach_workspace: 
+          at: /tmp/workspace
+      - setup_remote_docker
+      - 
+        run: 
+          command: "docker load -i /tmp/workspace/image.tar"
+          name: "Load archived Docker image"
+      - 
+        run: 
+          command: |
+              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+              docker push $IMAGE_NAME:latest
+          name: "Publish Docker Image to Docker Hub"
+version: 2.1
+workflows: 
+  build-master: 
+    jobs: 
+      - 
+        build: 
+          filters: 
+            branches: 
+              only: master
+      - 
+        publish-latest: 
+          filters: 
+            branches: 
+              only: master
+          requires: 
+            - build
+  version: 2
