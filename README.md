@@ -3,7 +3,7 @@
 
 The image is uploaded to Dockerhub https://hub.docker.com/r/johnsout/challenge/.
 
-Builds are automated using CircleCI
+Builds are automated using [CircleCI](.circleci/)
 
 Uses [nginxdemo/hello](https://hub.docker.com/r/nginxdemos/hello/) as a base image and populates two additional environment variables passed via k8s deployment
 
